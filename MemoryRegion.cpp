@@ -1,4 +1,5 @@
 #include "MemoryRegion.hpp"
+#include <limits>
 #include <cstdio>
 
 namespace mreg
@@ -93,17 +94,17 @@ namespace mreg
         rval.tail = nullptr;
     }
 
-    void MemoryRegionManager::info() const
+    void MemoryRegionManager::info(Unit unit) const
     {
-        static u64 len = 32;
+        static size_t len = 32;
         MemoryBlock* iter = head.next;
         while(iter)
         {
             u64 size = iter->end - (u8*)(iter) - sizeof(MemoryBlock);
             u64 free =  iter->end - iter->free;
             printf("[");
-            float occupied = size - free;
-            for(int i = 0; i < len; ++i)
+            u64 occupied = size - free;
+            for(size_t i = 0; i < len; ++i)
             {
                 occupied -= (float)size/len;
                 if(occupied >= 0)
@@ -111,18 +112,28 @@ namespace mreg
                 else
                     printf(" ");
             }
-            printf("] (%d / %d)\n",size - free,size);
+            occupied = size - free;
+            if(size > std::numeric_limits<int>::max())
+                unit = Unit::KILOBYTES;
+
+            if(unit == Unit::BYTES)
+                printf("] (%d B / %d B)\n", (int)occupied, (int)size);
+            else if (unit == Unit::KILOBYTES)
+                printf("] (%.2f KB / %.2f KB)\n", occupied/1024.f,size/1024.f);
+            else
+                printf("] (%.2f MB / %.2f MB)\n", occupied/1'048'510.f,size/1'048'510.f);
+
             iter  = iter->next;
         }
+
         iter = released;
-        u64 releasedBlocksCounter = 0;
+        size_t releasedBlocksCounter = 0;
         while(iter)
         {
             releasedBlocksCounter++;
             iter = iter->next;
         }
-        printf("Released blocks: %d\n",releasedBlocksCounter);
+        printf("Released blocks: %d\n", (int)releasedBlocksCounter);
     }
 
-
-}
+}   // mreg

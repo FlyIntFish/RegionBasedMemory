@@ -11,6 +11,12 @@ namespace mreg
     using u64 = uint64_t;
     using u8 = uint8_t;
 
+enum class Unit{
+    BYTES,
+    KILOBYTES,
+    MEGABYTES
+};
+
 
 [[nodiscard]] constexpr s64 kb(s64 amount) { return 1024 * amount;}
 [[nodiscard]] constexpr s64 mb(s64 amount) { return 1'048'576 * amount;}
@@ -44,7 +50,7 @@ class MemoryRegionManager
 
         void release();
         [[nodiscard]] u8 * allocate(u64 bytes);
-        void info() const;
+        void info(Unit unit = Unit::BYTES) const;
 
         template <typename T, typename... Args>
         T* emplace(Args&&... args);
